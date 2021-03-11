@@ -1,7 +1,11 @@
-import {apolloServer} from "./app";
+// import {apolloServer} from "./server";
 import mongoose from "mongoose";
 import config from "./utils/config";
-import {parseAsString} from "./tsUtils";
+import {parseAsString} from "./typeGuards";
+import cors from "cors";
+import express from 'express';
+import {apolloServer} from "./server";
+
 
 
 const MONGODB_URI = config.MONGODB_URI;
@@ -23,6 +27,18 @@ mongoose.connect(PARSED_MONGODB_URI, {
 
     });
 
-void apolloServer.listen().then(({ url }) => {
-    console.log(`Server ready at ${url}`);
+
+const app = express();
+
+apolloServer.applyMiddleware({app});
+
+app.use(cors());
+
+app.listen({port: 4000}, () => {
+    console.log('server ready at http://localhost:4000/graphql');
 });
+
+
+// void apolloServer.listen().then(({ url }) => {
+//     console.log(`Server ready at ${url}`);
+// });

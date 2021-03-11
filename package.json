@@ -13,13 +13,15 @@
     "tab:test": "ttab -t 'Tests' npm run test",
     "devServer:test": "run-s tab:devServer tab:test",
     "start-server-and-test": "start-server-and-test dev http-get://localhost:4000 test"
-
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "apollo-server": "^2.19.2",
+    "@googlemaps/google-maps-services-js": "^3.1.16",
+    "apollo-server-express": "^2.20.0",
+    "axios": "^0.21.1",
     "bcrypt": "^5.0.0",
+    "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "eslint-plugin-graphql": "^4.0.0",
     "eslint-plugin-jest": "^24.1.3",

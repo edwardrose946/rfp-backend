@@ -1,4 +1,4 @@
-import {gql} from "apollo-server";
+import {gql} from "apollo-server-express";
 
 export const typeDefs = gql`
     type Username {
@@ -13,17 +13,43 @@ export const typeDefs = gql`
     type Token {
         value: String!
     }
-
+    
+    type StatusText {
+        value: String
+    }
+    
+    type EncodedPolyLine {
+        points: String!
+    }
+    
+    type LatLng {
+        lat: String!
+        lng: String!
+    }
+    
+    type Address {
+        LatLng: LatLng
+        postcode: String!
+        firstLine: String!
+    }
+    
+    type Route {
+        EncodedPolyLine: EncodedPolyLine
+        addresses: [Address!]!   
+    }
+    
     type Query {
         allUsers: [Username!]!
         currentLoggedInUser: User
+        allProperties: StatusText
+        searchFilterGetDirections(list: String!, postcode: String!, radius: String!, results: String!): Route
     }
 
     type Mutation {
         addUser(
             username: String!
             password: String!
-        ): User
+        ): Boolean
         login(
             username: String!
             password: String!
