@@ -4,6 +4,6 @@ import {typeDefs} from "./typeDefs";
 
 export const gqlSchema = makeExecutableSchema({
     typeDefs: typeDefs,
-    resolvers: resolvers
+    resolvers: resolvers,
 });
 

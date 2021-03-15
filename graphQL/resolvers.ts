@@ -5,8 +5,8 @@ import * as jwt from "jsonwebtoken";
 import getDirectionsResponse from "../directions-service/directions-service";
 import {getSourcedProperties, getSourcedPropertiesWrapper} from "../properties-service/properties-service";
 import {filterByEPC} from "../business-logic/business-logic";
+import {SECRET_JWT} from "../index";
 
-const JWT_SECRET = 'ChickenDippers';
 
 interface IUser {
     username: string
@@ -65,15 +65,22 @@ export const resolvers = {
                 return e;
             }
         },
-        searchFilterGetDirections: async (_root: any, {
-            list,
-            postcode,
-            radius,
-            results
-        }: ISearchFilterGetDirectionsProps): Promise<IRoute> => {
+        searchFilterGetDirections: async (
+            _root: any,
+            {
+                list,
+                postcode,
+                radius,
+                results
+            }: ISearchFilterGetDirectionsProps,
+        ): Promise<IRoute> => {
             const propertiesResponse: any = await getSourcedProperties(list, postcode, radius, results);
             const properties = propertiesResponse.data.properties;
 
+            //if no properties returned from initial search fail fast
+            if (properties.length === 0) {
+                throw new UserInputError("No properties found for given search terms");
+            }
             //refactor into helper method file
             const asyncFilter = async (arr: any, predicate: any) => {
                 const results = await Promise.all(
@@ -83,13 +90,17 @@ export const resolvers = {
                 );
                 return arr.filter((_v: any, index: any) => results[index]);
             };
+
             const propertiesOfInterest = await asyncFilter(properties, async (property: any) => {
                 const firstLineAddress = property.address.split(',')[0];
                 const postcode = property.postcode;
                 return await filterByEPC(firstLineAddress, postcode);
             });
 
-            console.log(propertiesOfInterest);
+            if (propertiesOfInterest.length > 20) {
+                throw new UserInputError('Too many properties, reduce range of parameters.');
+            }
+
             const addresses = propertiesOfInterest.map(({lat, lng, address, postcode}: IPropertyProperties) => {
                 return {
                     LatLng: {
@@ -111,7 +122,6 @@ export const resolvers = {
 
     Mutation: {
         addUser: async (_root: unknown, args: IUser): Promise<boolean> => {
-
             const saltRounds = 10;
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
             const passwordHash: string = await bcrypt.hash(args.password, saltRounds);
@@ -122,6 +132,7 @@ export const resolvers = {
                 await newUser.save();
                 return true;
             } catch (e) {
+                console.log(e.message);
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                 throw new UserInputError(e.message, {
                     invalidArgs: args
@@ -146,8 +157,7 @@ export const resolvers = {
                 id: user._id
             };
 
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-            return {value: jwt.sign(userForToken, JWT_SECRET)};
+            return {value: jwt.sign(userForToken, SECRET_JWT)};
         }
     }
 };

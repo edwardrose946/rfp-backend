@@ -1,12 +1,19 @@
 import axios, {AxiosResponse} from "axios";
 
 function findPropertyOfInterest(certs: AxiosResponse, firstLineAddress: string) {
+    //if there are no certificates return true
+    if (certs.data === "") {
+        return true;
+    }
     return certs.data.rows.find((element: any) => {
         return element.address.includes(firstLineAddress);
     });
 }
 
 function noEnergyCertificate(propertyOfInterest: any) {
+    if (propertyOfInterest === undefined) {
+        return true;
+    }
     return !propertyOfInterest["current-energy-rating"];
 }
 
@@ -28,8 +35,8 @@ export const filterByEPC = async (firstLineAddress: string, postcode: string): P
         return noEnergyCertificate(propertyOfInterest) || ['G', 'F', 'E'].includes(propertyOfInterest["current-energy-rating"]);
     } catch (e) {
         console.log(e.message);
+        return false;
     }
-    return false;
 };
 
 export const filterByEPCWrapper = async (): Promise<boolean> => {
