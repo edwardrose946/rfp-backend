@@ -1,5 +1,5 @@
-import {graphQLClient} from "../test-client/client";
-import {ALL_USERS} from "../graphQL/queries/queries";
+import { ALL_USERS } from '../graphQL/queries/queries';
+import { graphQLClient } from '../test-client/client';
 
 test('example', () => {
     expect(2).toBe(2);
@@ -8,7 +8,7 @@ test('example', () => {
 test('there is one user', async () => {
 
 
-    const {data: {allUsers}} = await graphQLClient.query({
+    const { data: { allUsers } } = await graphQLClient.query({
         query: ALL_USERS
     });
     expect(allUsers).toHaveLength(1);

@@ -1,107 +1,110 @@
-import User from "../models/user";
-import * as bcrypt from "bcrypt";
-import {UserInputError} from "apollo-server-express";
-import * as jwt from "jsonwebtoken";
-import getDirectionsResponse from "../directions-service/directions-service";
-import {getSourcedProperties, getSourcedPropertiesWrapper} from "../properties-service/properties-service";
-import {filterByEPC} from "../business-logic/business-logic";
-import {SECRET_JWT} from "../index";
+import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
+import {
+    AddressData,
+    IUser,
+    NonConfidentialUser, Property,
+    PropertyData,
+    Route,
+    SearchFilterGetDirectionsProps,
+    Token
+} from '../utils/types-and-interfaces';
+import User, { IMongooseUser } from '../models/user';
+import { AxiosResponse } from 'axios';
+import { DocumentQuery } from 'mongoose';
+import { SECRET_JWT } from '../index';
+import { UserInputError } from 'apollo-server-express';
+import { asyncFilter } from '../utils/async-filter';
+import { filterByEPC } from '../business-logic/business-logic';
+import getDirectionsResponse from '../directions-service/directions-service';
+import { getSourcedProperties } from '../properties-service/properties-service';
 
-
-interface IUser {
-    username: string
-    password: string
-}
-
-interface IToken {
-    value: string
-}
-
-interface EncodedPolyLine {
-    points: string
-}
-
-interface ISearchFilterGetDirectionsProps {
-    list: string
-    postcode: string
-    radius: string
-    results: string
-}
-
-interface ILatLng {
-    lat: string
-    lng: string
-}
-
-interface IAddress {
-    LatLng: ILatLng
-    postcode: string
-    firstLine: string
-}
-
-interface IRoute {
-    EncodedPolyLine: EncodedPolyLine
-    addresses: [IAddress]
-}
-
-interface IPropertyProperties {
-    address: string
-    postcode: string
-    lat: string
-    lng: string
-}
 export const resolvers = {
-    Query: {
-        allUsers: async () => {
-            return User.find({});
-        },
-        allProperties: async () => {
+    Mutation: {
+        addUser: async (_root: unknown, args: IUser): Promise<boolean> => {
+            const saltRounds = 10;
+            const passwordHash: string = await bcrypt.hash(args.password, saltRounds);
+
+            const newUser = new User({ ...args, passwordHash: passwordHash });
+
             try {
-                const res = await getSourcedPropertiesWrapper();
-                console.log(res);
-                return {value: res.statusText};
+                await newUser.save();
+                return true;
             } catch (e) {
-                console.log(e);
-                return e;
+                throw new UserInputError(
+                    'Something went wrong saving your account to our database. ' +
+                    'Username probably already exists, try a different username.');
             }
         },
+        login: async (_root: unknown, args: IUser): Promise<Token> => {
+            const user: IMongooseUser | null = await User.findOne({ username: args.username });
+            const passwordCorrect: boolean = user === null ?
+                false :
+                await bcrypt.compare(args.password, user.passwordHash);
+
+            if (!user || !passwordCorrect) {
+                throw new UserInputError('Wrong credentials. Please try again.');
+            }
+
+            const userForToken = {
+                id: user._id,
+                username: user.username
+            };
+
+            return { value: jwt.sign(userForToken, SECRET_JWT) };
+        }
+    },
+
+    Query: {
+        allUsers: async (): Promise<DocumentQuery<NonConfidentialUser[], never>> => {
+            return User.find({});
+        },
         searchFilterGetDirections: async (
+            // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
             _root: any,
             {
                 list,
                 postcode,
                 radius,
                 results
-            }: ISearchFilterGetDirectionsProps,
-        ): Promise<IRoute> => {
-            const propertiesResponse: any = await getSourcedProperties(list, postcode, radius, results);
+            }: SearchFilterGetDirectionsProps,
+        ): Promise<Route> => {
+
+            // Axios typing is hard
+
+            // Get the list of properties for the given parameters
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const propertiesResponse: AxiosResponse<PropertyData> = await getSourcedProperties(
+                list, postcode, radius, results
+            );
             const properties = propertiesResponse.data.properties;
 
-            //if no properties returned from initial search fail fast
+            // Fail fast.
             if (properties.length === 0) {
-                throw new UserInputError("No properties found for given search terms");
+                throw new UserInputError('No properties found for given search terms');
             }
-            //refactor into helper method file
-            const asyncFilter = async (arr: any, predicate: any) => {
-                const results = await Promise.all(
-                    properties.map(
-                        predicate
-                    )
-                );
-                return arr.filter((_v: any, index: any) => results[index]);
-            };
 
-            const propertiesOfInterest = await asyncFilter(properties, async (property: any) => {
+            // Parse the first line of the address and the postcode and use that to find the EPC certificate for each
+            // property. If there is no cert or the rating is [E, F, G] then the property is of interest.
+            const propertiesOfInterest = await asyncFilter(properties, async (property: Property) => {
                 const firstLineAddress = property.address.split(',')[0];
                 const postcode = property.postcode;
                 return await filterByEPC(firstLineAddress, postcode);
             });
 
+
+            // Fail fast. Google maps has a 25 limit on waypoints.
             if (propertiesOfInterest.length > 20) {
                 throw new UserInputError('Too many properties, reduce range of parameters.');
             }
+            if (propertiesOfInterest.length <= 0) {
+                throw new UserInputError(
+                    'No properties left after business logic filtering, increase range of parameters'
+                );
+            }
 
-            const addresses = propertiesOfInterest.map(({lat, lng, address, postcode}: IPropertyProperties) => {
+            // Keep a tab on the properties of interest that will be returned to make a marker on the google map.
+            const addresses = propertiesOfInterest.map(({ lat, lng, address, postcode }: AddressData) => {
                 return {
                     LatLng: {
                         lat: lat,
@@ -112,52 +115,14 @@ export const resolvers = {
                 };
             });
 
-            const directionsResponse = await getDirectionsResponse(propertiesOfInterest.map((object: any) => `${object.address} ${object.postcode}`));
+            // Get the optimised route only for the properties of interest.
+            const directionsResponse = await getDirectionsResponse(
+                propertiesOfInterest.map((object: AddressData) => `${object.address} ${object.postcode}`));
+
             return {
                 EncodedPolyLine: directionsResponse.data.routes[0].overview_polyline,
                 addresses: addresses
             };
-        }
-    },
-
-    Mutation: {
-        addUser: async (_root: unknown, args: IUser): Promise<boolean> => {
-            const saltRounds = 10;
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-            const passwordHash: string = await bcrypt.hash(args.password, saltRounds);
-
-            const newUser = new User({...args, passwordHash: passwordHash});
-
-            try {
-                await newUser.save();
-                return true;
-            } catch (e) {
-                console.log(e.message);
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                throw new UserInputError(e.message, {
-                    invalidArgs: args
-                });
-            }
-        },
-        login: async (_root: unknown, args: IUser): Promise<IToken> => {
-            const user = await User.findOne({username: args.username});
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-            const passwordCorrect: boolean = user === null ?
-                false :
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-                await bcrypt.compare(args.password, user.passwordHash);
-
-            if (!user || !passwordCorrect) {
-                throw new UserInputError('wrong credentials');
-            }
-
-            const userForToken = {
-                username: user.username,
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                id: user._id
-            };
-
-            return {value: jwt.sign(userForToken, SECRET_JWT)};
         }
     }
 };

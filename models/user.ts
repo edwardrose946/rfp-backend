@@ -1,29 +1,31 @@
-import mongoose, {Document} from "mongoose";
+/* eslint-disable sort-keys */
+import mongoose, { Document, ObjectId } from 'mongoose';
 
-export interface IUser extends Document {
+export interface IMongooseUser extends Document {
     username: string;
     passwordHash: string;
+    _id?: ObjectId
 }
 
 const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
-        unique: true,
-        minlength: 5
-    },
     passwordHash: {
         type: String,
         required: true,
         minlength: 5
     },
+    username: {
+        type: String,
+        required: true,
+        minlength: 5,
+        unique: true
+    },
 });
 
 userSchema.set('toObject', {
-    transform: (_document: Document, returnedObject: IUser) => {
+    transform: (_document: Document, returnedObject: IMongooseUser) => {
         delete returnedObject._id;
         delete returnedObject.__v;
     }
 });
 
-export default mongoose.model<IUser>('User', userSchema);
+export default mongoose.model<IMongooseUser>('User', userSchema);
