@@ -1,5 +1,5 @@
 import { Client, DirectionsResponse } from '@googlemaps/google-maps-services-js';
-import { parseAsString } from '../utils/type-guards';
+import { GOOGLE_MAPS_API_KEY } from '../index';
 
 const client = new Client({});
 
@@ -10,7 +10,7 @@ const getDirectionsResponse = async (addresses: string[]): Promise<DirectionsRes
     return await client.directions({
         params: {
             destination: 'Bank House WA6 0PT',
-            key: parseAsString(process.env.GOOGLE_MAPS_API_KEY),
+            key: GOOGLE_MAPS_API_KEY,
             origin: 'Bank House WA6 0PT',
             waypoints: waypoints
 

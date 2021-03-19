@@ -1,7 +1,7 @@
 import { EPC, EPCData } from '../utils/types-and-interfaces';
 import axios, { AxiosResponse } from 'axios';
-import { parseAsEPC, parseAsString } from '../utils/type-guards';
-
+import { EPC_API_KEY } from '../index';
+import { parseAsEPC  } from '../utils/type-guards';
 
 function findPropertyOfInterestCert(certs: EPC[], firstLineAddress: string): EPC {
     return <EPC>certs.find((element) => {
@@ -21,7 +21,7 @@ async function getCertificatesByPostcode(postcode: string): Promise<AxiosRespons
     const encodedUrl = encodeURI(url);
     const headers = {
         Accept: `application/json`,
-        Authorization: `Basic ${parseAsString(process.env.EPC_API_KEY)}`
+        Authorization: `Basic ${EPC_API_KEY}`
     };
     return await axios.get<EPCData>(encodedUrl, { headers: headers });
 }
