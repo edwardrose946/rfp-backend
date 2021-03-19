@@ -8,6 +8,7 @@ RUN npm install
 
 COPY . .
 
+
 RUN npm run tsc
 
 EXPOSE 4000
