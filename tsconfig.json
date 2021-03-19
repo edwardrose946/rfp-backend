@@ -17,6 +17,8 @@
     "alwaysStrict": true,
     "declaration": true,
     "allowJs": true,
+    "outDir": "./build/",
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules"
