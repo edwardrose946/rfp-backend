@@ -16,6 +16,7 @@ export const parseAsString = (param: unknown | undefined): string => {
     return param;
 };
 
+
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const parseAsEPC = (param: any): EPC => {
     /* eslint-disable @typescript-eslint/no-unsafe-member-access */
