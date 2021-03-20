@@ -62,6 +62,7 @@ jobs:
             --build-arg JWT_SECRET="$JWT_SECRET" \
             --build-arg PROPERTYDATA_API_KEY="$PROPERTYDATA_API_KEY"
             .
+          docker images
       # Push the Docker image to Google Container Registry
       - name: Publish
         run: |-
