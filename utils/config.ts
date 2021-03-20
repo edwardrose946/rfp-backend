@@ -1,8 +1,7 @@
-
 import { config } from 'dotenv';
+import { parseAsString } from './type-guards';
 
 config();
-
 
 
 let MONGODB_URI = process.env.MONGODB_URI;
@@ -11,8 +10,9 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const PROPERTY_DATA_API_KEY = process.env.PROPERTYDATA_API_KEY;
 const EPC_API_KEY = process.env.EPC_API_KEY;
 
+
 if (process.env.NODE_ENV === 'test') {
-    MONGODB_URI = process.env.TEST_MONGODB_URI;
+    MONGODB_URI = parseAsString(process.env.TEST_MONGODB_URI);
 }
 
 export default {
