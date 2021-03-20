@@ -8,7 +8,7 @@ import { parseAsString } from './utils/type-guards';
 
 
 
-const PARSED_MONGODB_URI = parseAsString(config.MONGODB_URI);
+export const MONGODB_URI = parseAsString(config.MONGODB_URI);
 export const SECRET_JWT = parseAsString(config.SECRET_JWT);
 export const GOOGLE_MAPS_API_KEY = parseAsString(config.GOOGLE_MAPS_API_KEY);
 export const PROPERTY_DATA_API_KEY = parseAsString(config.PROPERTY_DATA_API_KEY);
@@ -16,7 +16,7 @@ export const EPC_API_KEY = parseAsString(config.EPC_API_KEY);
 
 
 
-mongoose.connect(PARSED_MONGODB_URI, {
+mongoose.connect(MONGODB_URI, {
     useCreateIndex: true,
     useFindAndModify: false,
     useNewUrlParser: true,

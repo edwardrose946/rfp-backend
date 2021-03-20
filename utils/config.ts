@@ -35,7 +35,10 @@ if (process.env.NODE_ENV === 'test') {
 } else {
     setSecrets()
         // eslint-disable-next-line no-console
+        .then(() => console.log('set'))
+        // eslint-disable-next-line no-console
         .catch(err => console.error(err));
+
 }
 
 export default {
