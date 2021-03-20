@@ -10,7 +10,6 @@ export const parseAsString = (param: unknown | undefined): string => {
         return param;
     }
     if (!param || !isString(param)) {
-        console.error(param);
         // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         throw new Error('Not a string: ' + param);
     }

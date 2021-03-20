@@ -7,6 +7,10 @@ import express from 'express';
 import { parseAsString } from './utils/type-guards';
 
 
+console.error(config.SECRET_JWT);
+console.error(config.GOOGLE_MAPS_API_KEY);
+console.error(config.EPC_API_KEY);
+console.error(config.MONGODB_URI);
 
 export const MONGODB_URI = parseAsString(config.MONGODB_URI);
 export const SECRET_JWT = parseAsString(config.SECRET_JWT);
