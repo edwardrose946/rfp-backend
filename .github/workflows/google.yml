@@ -77,6 +77,6 @@ jobs:
         run: |-
           kubectl run rfp-backend-pod --port 5000 --image="gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
           kubectl get pods
-          kubectl create deployment rate-repo-deployment --image="gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
-          kubectl expose deployment rate-repo-deployment --type=LoadBalancer --port 80 --target-port 5000
+          kubectl create deployment rfp-backend-deployment --image="gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
+          kubectl expose deployment rfp-backend-deployment --type=LoadBalancer --port 80 --target-port 5000
           kubectl get service
