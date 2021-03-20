@@ -2,10 +2,8 @@
 import mongoose, { Error } from 'mongoose';
 import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
 import { apolloServer } from './server';
-import config from './utils/config';
 import cors from 'cors';
 import express from 'express';
-import { parseAsString } from './utils/type-guards';
 
 const client = new SecretManagerServiceClient();
 
@@ -28,15 +26,23 @@ async function setSecrets() {
     PROPERTY_DATA_API_KEY = await getSecret('projects/326578430699/secrets/PROPERTYDATA_API_KEY/versions/1');
 }
 
-export let MONGODB_URI = parseAsString(config.MONGODB_URI);
-export let SECRET_JWT = parseAsString(config.SECRET_JWT);
-export let GOOGLE_MAPS_API_KEY = parseAsString(config.GOOGLE_MAPS_API_KEY);
-export let PROPERTY_DATA_API_KEY = parseAsString(config.PROPERTY_DATA_API_KEY);
-export let EPC_API_KEY = parseAsString(config.EPC_API_KEY);
+export let MONGODB_URI = '';
+export let SECRET_JWT = '';
+export let GOOGLE_MAPS_API_KEY = '';
+export let PROPERTY_DATA_API_KEY = '';
+export let EPC_API_KEY = '';
+//
+// export let MONGODB_URI = parseAsString(config.MONGODB_URI);
+// export let SECRET_JWT = parseAsString(config.SECRET_JWT);
+// export let GOOGLE_MAPS_API_KEY = parseAsString(config.GOOGLE_MAPS_API_KEY);
+// export let PROPERTY_DATA_API_KEY = parseAsString(config.PROPERTY_DATA_API_KEY);
+// export let EPC_API_KEY = parseAsString(config.EPC_API_KEY);
 
 setSecrets()
-    .then(()=> console.log('set'))
+    .then(()=> console.error('set'))
     .catch(err => console.error(err));
+
+console.error('Mongo:', MONGODB_URI);
 
 mongoose.connect(MONGODB_URI, {
     useCreateIndex: true,
