@@ -75,7 +75,6 @@ jobs:
       # Deploy the Docker image to the GKE cluster
       - name: Deploy
         run: |-
-          kubectl delete pod,service rfp-backend-pod rfp-backend-deployment
           kubectl run rfp-backend-pod --port 5000 --image="gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
           kubectl get pods
           kubectl create deployment rfp-backend-deployment --image="gcr.io/$PROJECT_ID/$IMAGE:$GITHUB_SHA"
