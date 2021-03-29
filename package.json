@@ -7,7 +7,7 @@
     "ts-node": "ts-node",
     "dev": "NODE_ENV=test ts-node-dev index.ts",
     "lint": "eslint --ext .ts .",
-    "tsc": "tsc",
+    "tsc": "tsc -p ./",
     "test": "jest --verbose --runInBand",
     "tab:devServer": "ttab -t 'Server' npm run dev",
     "tab:test": "ttab -t 'Tests' npm run test",

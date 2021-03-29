@@ -4,15 +4,14 @@ import { apolloServer } from './server';
 import config from './utils/config';
 import cors from 'cors';
 import express from 'express';
-import { parseAsString } from './utils/type-guards';
 
 
-export const MONGODB_URI = parseAsString(config.MONGODB_URI);
-export const SECRET_JWT = parseAsString(config.SECRET_JWT);
-export const GOOGLE_MAPS_API_KEY = parseAsString(config.GOOGLE_MAPS_API_KEY);
-export const PROPERTY_DATA_API_KEY = parseAsString(config.PROPERTY_DATA_API_KEY);
-export const EPC_API_KEY = parseAsString(config.EPC_API_KEY);
-
+export const MONGODB_URI = config.MONGODB_URI as string;
+export const SECRET_JWT = config.SECRET_JWT as string;
+export const GOOGLE_MAPS_API_KEY = config.GOOGLE_MAPS_API_KEY as string;
+export const PROPERTY_DATA_API_KEY = config.PROPERTY_DATA_API_KEY as string;
+export const EPC_API_KEY = config.EPC_API_KEY as string;
+const PORT = config.PORT as string;
 
 
 mongoose.connect(MONGODB_URI, {
@@ -36,6 +35,6 @@ apolloServer.applyMiddleware({ app });
 
 app.use(cors());
 
-app.listen({ port: 4000 }, () => {
-    console.log('server ready at http://localhost:4000/graphql');
+app.listen({ port: PORT }, () => {
+    console.log(`server ready at http://localhost:${PORT}/graphql`);
 });
